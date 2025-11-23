@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui">
+
+<h:head>
+    <title>Registro de Usuario</title>
+    <link rel="stylesheet" href="https://unpkg.com/primeflex@latest/primeflex.css" />
+    <style>
+        /* Estilos personalizados para el cuerpo y centrado */
+        body {
+            background-color: #f3f4f6; /* Fondo gris claro */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        /* Estilo para el contenedor de la tarjeta */
+        .registro-card {
+            width: 100%;
+            max-width: 400px; /* Ancho máximo para el formulario */
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            background-color: #ffffff;
+        }
+        /* Estilo para el botón primario de guardar */
+        .ui-button-principal {
+            background: #1e293b !important;
+            border-color: #1e293b !important;
+            color: #ffffff !important;
+            font-weight: 700;
+        }
+    </style>
+</h:head>
+
+<h:body>
+    <div class="registro-card">
+
+        <div class="text-center mb-5">
+            <i class="pi pi-user-plus text-7xl" style="color:#1e293b;"></i>
+            <h2 class="text-3xl font-bold mt-2" style="color:#1e293b;">Crear Cuenta</h2>
+        </div>
+
+        <h:form id="forma-registro">
+
+            <p:growl id="mensajes" showDetail="true" />
+
+            <div class="ui-fluid">
+                <div class="field mb-4">
+                    <p:outputLabel for="username" value="Username:" />
+                    <p:inputText id="username"
+                                 value="#{registroControlador.usuario.usuario}"
+                                 required="true"
+                                 placeholder="Ingresa tu username"
+                                 label="username" />
+                </div>
+
+
+                <div class="field mb-4">
+                    <p:outputLabel for="password" value="Contraseña:" />
+                    <p:password id="password"
+                                value="#{registroControlador.usuario.password}"
+                                required="true"
+                                placeholder="Mínimo 8 caracteres"
+                                label="Contraseña"
+                                feedback="true"
+                                match="password-confirmacion"
+                                requiredMessage="La contraseña es obligatoria."
+                                minLength="8" />
+                </div>
+
+                <div class="field mb-5">
+                    <p:outputLabel for="password-confirmacion" value="Confirmar Contraseña:" />
+                    <p:password id="password-confirmacion"
+                                value="#{registroControlador.usuario.password}"
+                                required="true"
+                                placeholder="Repite la contraseña"
+                                label="Confirmar Contraseña"
+                                requiredMessage="Debes confirmar la contraseña."
+                                minLength="8" />
+                </div>
+
+                <p:commandButton value="Registrarse"
+                                 actionListener="#{registroControlador.registrar}"
+                                 update="mensajes @form"
+                                 styleClass="ui-button-principal w-full p-button-lg"
+                                 icon="pi pi-check" />
+            </div>
+        </h:form>
+
+        <div class="text-center mt-3">
+            <h:link outcome="login.xhtml" value="¿Ya tienes cuenta? Inicia Sesión" style="color:#1e293b; font-weight:600;" />
+        </div>
+
+    </div>
+</h:body>
+</html>

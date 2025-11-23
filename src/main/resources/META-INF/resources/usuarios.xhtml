@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui">
+
+<h:head>
+    <title>Gestión de Usuarios</title>
+    <link rel="stylesheet" href="https://unpkg.com/primeflex@latest/primeflex.css" />
+</h:head>
+
+<h:body>
+    <div class="card p-4">
+
+        <div class="card mb-3">
+            <h:form>
+                <p:menubar style="background:#1e293b; border:none; border-radius:8px;">
+                    <p:menuitem value="Volver al Inventario"
+                                icon="pi pi-fw pi-chevron-left"
+                                outcome="index.xhtml?faces-redirect=true" />
+                    <f:facet name="options">
+                        <p:outputLabel value="Administrador: #{sesionUsuario.usuarioLogueado.usuario}"
+                                       style="color: #facc15; font-weight: 700; margin-right: 15px;" />
+                    </f:facet>
+                </p:menubar>
+            </h:form>
+        </div>
+
+        <h:form id="forma-usuarios">
+            <p:growl id="mensajes" showDetail="true" />
+            <h3 class="text-xl my-3">Gestión de Cuentas de Usuarios</h3>
+
+            <p:commandButton value="Nuevo Usuario"
+                             icon="pi pi-user-plus"
+                             actionListener="#{usuarioControlador.agregarUsuario}"
+                             update=":forma-modal-usuario:usuario-ventana"
+                             oncomplete="PF('ventanaModalUsuario').show()"
+                             class="mb-3" />
+
+            <p:dataTable value="#{usuarioControlador.usuarios}" var="u"
+                         id="usuarios-tabla"
+                         styleClass="shadow-3 border-round-lg">
+
+                <p:column headerText="Id" style="width:50px;">
+                    <h:outputText value="#{u.id}" />
+                </p:column>
+
+                <p:column headerText="Usuario">
+                    <h:outputText value="#{u.usuario}" />
+                </p:column>
+
+                <p:column headerText="Rol">
+                    <h:outputText value="#{u.rol}" />
+                </p:column>
+
+                <p:column headerText="Estado">
+                    <p:tag value="#{u.activo ? 'ACTIVO' : 'INACTIVO'}"
+                           severity="#{u.activo ? 'success' : 'danger'}" />
+                </p:column>
+
+                <p:column headerText="Acciones" style="width:200px;">
+                    <div class="flex gap-2">
+                        <p:commandButton icon="pi pi-pencil"
+                                         update=":forma-modal-usuario:usuario-ventana"
+                                         oncomplete="PF('ventanaModalUsuario').show()"
+                                         title="Editar Rol/Estado"
+                                         styleClass="p-button-primary p-button-sm p-button-icon-only">
+                            <f:setPropertyActionListener target="#{usuarioControlador.usuarioSeleccionado}" value="#{u}" />
+                            <p:resetInput target=":forma-modal-usuario:usuario-ventana" />
+                        </p:commandButton>
+
+                        <p:commandButton icon="pi pi-lock"
+                                         update=":forma-modal-password:password-ventana"
+                                         oncomplete="PF('ventanaModalPassword').show()"
+                                         title="Cambiar Contraseña"
+                                         styleClass="p-button-warning p-button-sm p-button-icon-only">
+                            <f:setPropertyActionListener target="#{usuarioControlador.usuarioSeleccionado}" value="#{u}" />
+                        </p:commandButton>
+
+                        <p:commandButton icon="pi pi-trash"
+                                         oncomplete="PF('eliminarUsuarioVentana').show()"
+                                         title="Eliminar"
+                                         styleClass="p-button-danger p-button-sm p-button-icon-only">
+                            <f:setPropertyActionListener target="#{usuarioControlador.usuarioSeleccionado}" value="#{u}" />
+                        </p:commandButton>
+                    </div>
+                </p:column>
+
+            </p:dataTable>
+        </h:form>
+
+        <h:form id="forma-modal-usuario">
+            <p:dialog header="#{usuarioControlador.usuarioSeleccionado.id == null ? 'Nuevo Usuario' : 'Editar Usuario'}"
+                      showEffect="fade" modal="true"
+                      widgetVar="ventanaModalUsuario" responsive="true">
+                <p:outputPanel id="usuario-ventana" class="ui-fluid">
+                    <div class="field">
+                        <p:outputLabel for="username" value="Usuario:" />
+                        <p:inputText id="username"
+                                     value="#{usuarioControlador.usuarioSeleccionado.usuario}"
+                                     required="true" />
+                    </div>
+
+                    <h:panelGroup rendered="#{usuarioControlador.usuarioSeleccionado.id == null}">
+                        <div class="field">
+                            <p:outputLabel for="password" value="Contraseña:" />
+                            <p:password id="password"
+                                        value="#{usuarioControlador.usuarioSeleccionado.password}"
+                                        required="true" />
+                        </div>
+                    </h:panelGroup>
+
+                    <div class="field">
+                        <p:outputLabel for="rol" value="Rol:" />
+                        <p:selectOneMenu id="rol" value="#{usuarioControlador.usuarioSeleccionado.rol}">
+                            <f:selectItem itemLabel="Estándar" itemValue="standard"/>
+                            <f:selectItem itemLabel="Administrador" itemValue="admin"/>
+                        </p:selectOneMenu>
+                    </div>
+
+                    <div class="field">
+                        <p:outputLabel for="activo" value="Estado Activo:" />
+                        <p:selectBooleanCheckbox id="activo" value="#{usuarioControlador.usuarioSeleccionado.activo}" />
+                    </div>
+
+                </p:outputPanel>
+
+                <f:facet name="footer">
+                    <p:commandButton value="Guardar"
+                                     icon="pi pi-check"
+                                     actionListener="#{usuarioControlador.guardarUsuario}"
+                                     process="usuario-ventana @this"
+                                     update=":forma-usuarios:usuarios-tabla :forma-usuarios:mensajes"
+                                     oncomplete="if (!args.validationFailed) PF('ventanaModalUsuario').hide()" />
+                    <p:commandButton value="Cancelar" icon="pi pi-times" onclick="PF('ventanaModalUsuario').hide()" class="ui-button-secondary" type="button" />
+                </f:facet>
+            </p:dialog>
+        </h:form>
+
+        <h:form id="forma-modal-password">
+            <p:dialog header="Cambiar Contraseña para #{usuarioControlador.usuarioSeleccionado.usuario}"
+                      showEffect="fade" modal="true"
+                      widgetVar="ventanaModalPassword" responsive="true">
+                <p:outputPanel id="password-ventana" class="ui-fluid">
+                    <div class="field">
+                        <p:outputLabel for="new-pass" value="Nueva Contraseña:" />
+                        <p:password id="new-pass"
+                                    value="#{usuarioControlador.usuarioSeleccionado.password}"
+                                    required="true" />
+                    </div>
+
+                    <div class="field">
+                        <p:outputLabel for="confirm-pass" value="Confirmar Contraseña:" />
+                        <p:password id="confirm-pass"
+                                    value="#{usuarioControlador.nuevaPasswordConfirmacion}"
+                                    required="true"
+                                    match="new-pass"
+                                    validatorMessage="Las contraseñas no coinciden." />
+                    </div>
+                </p:outputPanel>
+
+                <f:facet name="footer">
+                    <p:commandButton value="Cambiar"
+                                     icon="pi pi-lock"
+                                     actionListener="#{usuarioControlador.cambiarContrasena}"
+                                     process="password-ventana @this"
+                                     update=":forma-usuarios:usuarios-tabla :forma-usuarios:mensajes"
+                                     oncomplete="if (!args.validationFailed) PF('ventanaModalPassword').hide()" />
+                    <p:commandButton value="Cancelar" icon="pi pi-times" onclick="PF('ventanaModalPassword').hide()" class="ui-button-secondary" type="button" />
+                </f:facet>
+            </p:dialog>
+        </h:form>
+
+        <h:form>
+            <p:confirmDialog widgetVar="eliminarUsuarioVentana" showEffect="fade" with="300"
+                             message="¿Está seguro de eliminar a #{usuarioControlador.usuarioSeleccionado.usuario}?"
+                             header="Confirmar Eliminación" severity="warn">
+                <p:commandButton value="Sí" icon="pi pi-check"
+                                 actionListener="#{usuarioControlador.eliminarUsuario}"
+                                 process="@this"
+                                 update=":forma-usuarios:usuarios-tabla :forma-usuarios:mensajes"
+                                 oncomplete="PF('eliminarUsuarioVentana').hide()"/>
+                <p:commandButton value="No" type="button" styleClass="ui-button-secondary" icon="pi pi-times" onclick="PF('eliminarUsuarioVentana').hide()"/>
+            </p:confirmDialog>
+        </h:form>
+
+    </div>
+</h:body>
+</html>

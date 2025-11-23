@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui">
+
+<h:head>
+    <title>Sistema Inventario</title>
+    <link rel="stylesheet" href="https://unpkg.com/primeflex@latest/primeflex.css" />
+    <style>
+        /* TEXTO del item */
+        .ui-menuitem-link .ui-menuitem-text {
+            color: #ffffff !important;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        /* ICONO del item */
+        .ui-menuitem-link .ui-menuitem-icon {
+            color: #ffffff !important;
+            font-size: 1.2rem;
+            margin-right: 8px;
+        }
+
+        /* HOVER */
+        .ui-menuitem-link:hover .ui-menuitem-text,
+        .ui-menuitem-link:hover .ui-menuitem-icon {
+            color: #facc15 !important;
+        }
+    </style>
+
+</h:head>
+
+<h:body>
+    <div class="card p-4">
+
+        <h:form id="forma-productos">
+
+            <p:growl id="mensajes" showDetail="true" />
+
+            <!-- 🔵 NAVBAR ORIGINAL MEJORADO -->
+            <div class="card mb-3">
+                <p:menubar style="background:#1e293b; border:none; border-radius:8px;">
+
+                    <p:menuitem value="Inicio"
+                                icon="pi pi-fw pi-home"
+                                update=":forma-productos:productos-tabla"
+                                actionListener="#{indexControlador.cargarDatos}" />
+
+                    <p:menuitem value="Nuevo Producto"
+                                icon="pi pi-fw pi-plus"
+                                rendered="#{sesionUsuario.esAdmin()}"
+                                actionListener="#{indexControlador.agregarProducto}"
+                                update=":forma-modal:producto-ventana"
+                                oncomplete="PF('ventanaModalProducto').show()" />
+
+                    <p:menuitem value="Usuarios"
+                                icon="pi pi-fw pi-users"
+                                rendered="#{sesionUsuario.esAdmin()}"
+                                outcome="usuarios.xhtml?faces-redirect=true" />
+
+                    <f:facet name="options">
+                        <p:outputLabel value="Bienvenido, #{sesionUsuario.usuarioLogueado.usuario}!"
+                                       style="color: #facc15; font-weight: 700; margin-right: 15px;" />
+
+                        <p:commandButton value="Cerrar Sesión"
+                                         action="#{sesionUsuario.cerrarSesion()}"
+                                         icon="pi pi-sign-out"
+                                         styleClass="ui-button-secondary"
+                                         immediate="true"
+                                         ajax="false" />
+                    </f:facet>
+
+                </p:menubar>
+            </div>
+
+            <div class="flex flex-wrap gap-2 mb-3">
+                <p:commandLink title="Exportar a Excel"
+                               styleClass="ui-button ui-widget ui-state-default ui-corner-all p-button-sm flex align-items-center"
+                               style="background:#10b981; border-color:#059669; color:#fff; text-decoration: none; padding: 0.5rem 1rem;">
+
+                    <span class="pi pi-file-excel mr-1" style="font-size: 1rem;"></span>
+                    <span class="ui-button-text font-bold text-sm">Exportar Lista</span>
+
+                    <p:dataExporter type="xls"
+                                    target="productos-tabla"
+                                    fileName="Inventario_Productos"
+                                    encoding="ISO-8859-1" />
+                </p:commandLink>
+
+            </div>
+            <!-- TABLA -->
+            <p:dataTable value="#{indexControlador.productos}" var="producto"
+                         styleClass="shadow-3 border-round-lg ui-datatable-compact"
+                         tableStyleClass="border-round-lg"
+                         id="productos-tabla"
+                         widgetVar="productosTabla">
+
+                <f:facet name="header">
+                    <div class="flex justify-content-center my-3">
+                        <div style="background-color:#facc15 !important; color:#000; padding:15px; border-radius:8px;"
+                             class="flex align-items-center justify-content-center
+                                    w-20rem h-4rem bg-yellow-400 font-bold text-gray-900
+                                    border-round-xl shadow-2">
+                            <h3 class="m-0">Sistema de Inventario</h3>
+                        </div>
+                    </div>
+                </f:facet>
+
+                <p:column headerText="Id">
+                    <h:outputText value="#{producto.id}" />
+                </p:column>
+
+                <p:column headerText="Código">
+                    <h:outputText value="#{producto.codigo}" />
+                </p:column>
+
+                <p:column headerText="Nombre">
+                    <h:outputText value="#{producto.nombre}" />
+                </p:column>
+
+                <p:column headerText="Categoría">
+                    <h:outputText value="#{producto.categoria}" />
+                </p:column>
+
+                <p:column headerText="Precio">
+                    <h:outputText value="#{producto.precio}">
+                        <f:convertNumber type="currency" currencySymbol="$" />
+                    </h:outputText>
+                </p:column>
+
+                <p:column headerText="Stock">
+                    <h:outputText value="#{producto.stock}" />
+                </p:column>
+
+                <p:column headerText="Estado">
+                    <h:outputText value="#{producto.activo}" />
+                </p:column>
+
+                <p:column headerText="Acciones" exportable="false">
+                    <h:panelGroup rendered="#{sesionUsuario.esAdmin()}">
+
+                        <div class="flex gap-2">
+
+                            <p:commandButton value="Editar"
+                                             icon="pi pi-pencil"
+                                             update=":forma-modal:producto-ventana"
+                                             oncomplete="PF('ventanaModalProducto').show()"
+                                             process="@this"
+                                             styleClass="ui-button-primary p-button-sm">
+
+                                <f:setPropertyActionListener target="#{indexControlador.productoSeleccionado}" value="#{producto}" />
+                                <p:resetInput target=":forma-modal:producto-ventana" />
+                            </p:commandButton>
+
+                            <p:commandButton value="Eliminar"
+                                             icon="pi pi-trash"
+                                             process="@this"
+                                             oncomplete="PF('eliminarProductoVentana').show()"
+                                             styleClass="ui-button-danger p-button-sm">
+
+                                <f:setPropertyActionListener target="#{indexControlador.productoSeleccionado}" value="#{producto}" />
+                            </p:commandButton>
+                        </div>
+                    </h:panelGroup>
+
+                    <h:outputText value="Solo Vista" rendered="#{!sesionUsuario.esAdmin()}" />
+
+                </p:column>
+
+            </p:dataTable>
+        </h:form>
+
+        <h:form id="forma-modal">
+            <p:dialog header="Detalles Producto" showEffect="fade" modal="true"
+                      widgetVar="ventanaModalProducto" responsive="true">
+                <p:outputPanel id="producto-ventana" class="ui-fluid">
+
+                    <div class="field">
+                        <p:outputLabel for="codigo" value="Código:" />
+                        <p:inputText id="codigo" value="#{indexControlador.productoSeleccionado.codigo}" required="true" />
+                    </div>
+
+                    <div class="field">
+                        <p:outputLabel for="nombre" value="Nombre:" />
+                        <p:inputText id="nombre" value="#{indexControlador.productoSeleccionado.nombre}" required="true" />
+                    </div>
+
+                    <div class="field">
+                        <p:outputLabel for="categoria" value="Categoría:" />
+                        <p:selectOneMenu id="categoria" value="#{indexControlador.productoSeleccionado.categoria}">
+                            <f:selectItem itemLabel="Selecciona" itemValue="" />
+                            <f:selectItem itemLabel="Electronica" itemValue="Electronico"/>
+                            <f:selectItem itemLabel="Deportes" itemValue="Deporte"/>
+                        </p:selectOneMenu>
+                    </div>
+
+                    <div class="field">
+                        <p:outputLabel for="precio" value="Precio:" />
+                        <p:inputText id="precio" value="#{indexControlador.productoSeleccionado.precio}" required="true" />
+                    </div>
+
+                    <div class="field">
+                        <p:outputLabel for="stock" value="Stock:" />
+                        <p:inputText id="stock" value="#{indexControlador.productoSeleccionado.stock}" required="true" />
+                    </div>
+
+                </p:outputPanel>
+
+                <f:facet name="footer">
+                    <p:commandButton value="Guardar" icon="pi pi-check" actionListener="#{indexControlador.guardarProducto}" process="producto-ventana @this" />
+                    <p:commandButton value="Cancelar" icon="pi pi-times" onclick="PF('ventanaModalProducto').hide()" class="ui-button-secondary" type="button" />
+                </f:facet>
+            </p:dialog>
+            <p:confirmDialog widgetVar="eliminarProductoVentana" showEffect="fade" with="300" message="Eliminar el producto?" header="Confirmar" severity="warn">
+                <p:commandButton value="Si" icon="pi pi-check" actionListener="#{indexControlador.eliminarProducto}" process="@this" oncomplete="PF('eliminarProductoVentana').hide()"/>
+                <p:commandButton value="No" type="Button" styleClass="ui-button-secondary" icon="pi pi-times" onclick="PF('eliminarProductoVentana').hide()"/>
+            </p:confirmDialog>
+        </h:form>
+
+    </div>
+</h:body>
+</html>
