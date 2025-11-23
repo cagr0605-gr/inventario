@@ -40,7 +40,7 @@ public class IndexControlador {
     }
 
     public void guardarProducto(){
-        logger.info("Producto a guardar : " + this.productoSeleccionado);
+        logger.info("Producto a guardar: " + this.productoSeleccionado);
         if(this.productoSeleccionado.getId() == null){
             this.productoServicio.guardarProducto(this.productoSeleccionado);
             this.productos.add(this.productoSeleccionado);
